@@ -60,8 +60,76 @@ class CsiNetPlus(nn.Module):
 
         return out
 
+# PyTorch 现在加入了nn.Flatten()
 
+class DeFlatten(nn.Module):
+    def __init__(self,size):
+        super(DeFlatten, self).__init__()
+        self.size = size
+    def forward(self, x):
+        x = x.view(self.size)
+        return x
+class Decoder(nn.Module):
+    pass
+
+
+
+class SM_CsiNet(nn.Module):
+    def __init__(self,reduction_base=4):
+        super(SM_CsiNet, self).__init__()
+        total_size, in_channel, w, h = 2048, 2, 32, 32
+        self.encoder_conv = nn.Sequential(OrderedDict([
+            ("conv1_7x7", ConvLayer(2, 2, 7, activation='LeakyReLu')),
+            ("conv2_7x7",ConvLayer(2,2,7,activation='LeakyReLu'))
+        ]))
+        self.fc_cr4 = nn.Linear(total_size, total_size // 4)
+        self.fc_cr8 = nn.Linear(total_size//4,total_size//8)
+        self.fc_cr16 = nn.Linear(total_size // 8, total_size // 16)
+        self.fc_cr32 = nn.Linear(total_size // 16, total_size//32)
         
+    def forward(self, x,idx):
+        x = self.encoder(x)
+        # 如何控制流程？
+        # 在训练过程中，原文是end 2 end的形式
+        # 但是如果是交替的形式呢？不同的维度需要冻结
+        
+        dim_cr4 = self.fc_cr4(x)
+        dim_cr8 = self.fc_cr8(dim_cr4)
+        dim_cr16 = self.fc_cr16(dim_cr8)
+        dim_cr32 = self.fc_cr32(dim_cr16)
+
+        out_cr4 = self.decoder_cr4(dim_cr4)
+        out_cr8 = self.decoder_cr8(dim_cr8)
+        out_cr16 = self.decoder_cr16(dim_cr16)
+        out_cr32 = self.decoder_cr32(dim_cr32)
+        
+        out_list = [out_cr4, out_cr8, out_cr16, out_cr32]
+        # idx 为索引列表 例如idx = [0,1,2,3,4],表示返回所有值
+        # idx = [0,1]只返回部分结果
+        out = out_list[idx]
+
+        return out
+
+class Encoder(nn.Module):
+    pass
+class Decoder(nn.Module):
+    pass
+class PM_CsiNet(nn.Module):
+    def __init__(self):
+        super(PM_CsiNet, self).__init__()
+        self.encoder = Encoder()
+        self.fc_list = nn.ModuleList(nn.Linear(512, 64) for i in range(8))
+        self.decoder_list = nn.ModuleList(Decoder(reduction=i) for i in [32,16,8,4])
+    def forward(self, x):
+        dim_512 = self.encoder(x)
+        dim_64_list = [self.fc_list[i](x) for i in range(8)]
+        cr_out_list = [torch.sum(dim_64_list[:(i**2)]) for i in range(4)]
+        out_list = [self.decoder_list[i](cr_out_list[i]) for i in range(4)]
+
+        return out_list
+
+
+
 
 
 if __name__ == "__main__":
