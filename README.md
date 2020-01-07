@@ -14,6 +14,7 @@ MIMO CSI feedback: Design, simulation, and analysis](https://arxiv.org/abs/1906.
 [1]C. Wen, W. Shih and S. Jin, “Deep Learning for Massive MIMO CSI
 Feedback,” IEEE Wireless Communications Letters, vol. 7, no. 5, pp.
 748-751, Oct. 2018
+
 [2]J. Guo, C.-K. Wen, S. Jin, and G. Y. Li, “Convolutional neural network based multiple-rate compressive sensing for massive
 MIMO CSI feedback: Design, simulation, and analysis,” arXiv preprint
 arXiv:1906.06007, 2019
