@@ -123,7 +123,7 @@ class PM_CsiNet(nn.Module):
     def forward(self, x):
         dim_512 = self.encoder(x)
         dim_64_list = [self.fc_list[i](x) for i in range(8)]
-        cr_out_list = [torch.sum(dim_64_list[:(i**2)]) for i in range(4)]
+        cr_out_list = [torch.cat(dim_64_list[:(i**2)],dim=1) for i in range(4)]
         out_list = [self.decoder_list[i](cr_out_list[i]) for i in range(4)]
 
         return out_list
